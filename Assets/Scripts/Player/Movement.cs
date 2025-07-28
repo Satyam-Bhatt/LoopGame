@@ -22,19 +22,39 @@ public class Movement : MonoBehaviour
         Vector2 horizontalInput = new Vector2(Input.GetAxis("Horizontal"), 0f);
         Vector2 verticalInput = new Vector2(0f, Input.GetAxis("Vertical"));
 
+        // Acceleration Movement
         Vector2 movement = horizontalInput + verticalInput;
         Vector2 acceleration = movement.normalized;
 
-        if(acceleration != Vector2.zero)
+        if (acceleration != Vector2.zero)
             velocity += acceleration * accelerationConstant * Time.deltaTime;
         else
         {
             velocity -= velocity * decelerationConstant * Time.deltaTime;
         }
 
+        bool dirChanged = false;
+        if(lastAcceleration != acceleration && acceleration != Vector2.zero)
+        {
+            dirChanged = true;
+            velocity -= velocity * decelerationConstant * Time.deltaTime * 2;
+
+            if(Approximate(velocity, Vector2.zero, 0.1f))
+            {
+                lastAcceleration = acceleration;
+                dirChanged = false;
+            }
+        }
+
+        if(dirChanged == false) lastAcceleration = acceleration;
         velocity = Vector2.ClampMagnitude(velocity, Maxspeed);
         Debug.Log("Velocity: " + velocity + " || Acceleration: " + acceleration);
         transform.position += (Vector3)velocity * Time.deltaTime;
+
+        // Tranform movement
+        //Vector2 movement = horizontalInput + verticalInput;
+
+        //transform.position += (Vector3)movement * Time.deltaTime * Maxspeed;
 
         AnimationHandle(movement.normalized);
     }
