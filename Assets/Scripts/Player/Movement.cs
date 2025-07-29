@@ -10,7 +10,7 @@ public class Movement : MonoBehaviour
 
     private Animator animator;
     private Vector2 velocity = Vector2.zero;
-    private Vector2 lastAcceleration = Vector2.zero;
+    public Vector2 lastDirection = Vector2.zero;
 
     private void Awake()
     {
@@ -26,28 +26,35 @@ public class Movement : MonoBehaviour
         Vector2 movement = horizontalInput + verticalInput;
         Vector2 acceleration = movement.normalized;
 
-        if (acceleration != Vector2.zero)
+        if (movement.x == 0) movement.x = 0;
+        else if (movement.x < 0) movement.x = -1;
+        else if (movement.x > 0) movement.x = 1;
+
+        bool dirChanged = false;
+        if (lastDirection.x != movement.x && velocity != Vector2.zero)
+        {
+            Debug.Log("RUN");
+            dirChanged = true;
+            velocity -= velocity * decelerationConstant * Time.deltaTime * 2;
+
+            if (Approximate(velocity, Vector2.zero, 0.1f))
+            {
+               // lastDirection = acceleration;
+                dirChanged = false;
+            }
+        }
+
+        if (acceleration != Vector2.zero && dirChanged == false)
             velocity += acceleration * accelerationConstant * Time.deltaTime;
         else
         {
             velocity -= velocity * decelerationConstant * Time.deltaTime;
         }
 
-        bool dirChanged = false;
-        if(lastAcceleration != acceleration && acceleration != Vector2.zero)
-        {
-            dirChanged = true;
-            velocity -= velocity * decelerationConstant * Time.deltaTime * 2;
 
-            if(Approximate(velocity, Vector2.zero, 0.1f))
-            {
-                lastAcceleration = acceleration;
-                dirChanged = false;
-            }
-        }
-
-        if(dirChanged == false) lastAcceleration = acceleration;
+        if (dirChanged == false) lastDirection = movement;
         velocity = Vector2.ClampMagnitude(velocity, Maxspeed);
+        Debug.Log("Movement: " + movement + " || Last Direction: " + lastDirection);
         Debug.Log("Velocity: " + velocity + " || Acceleration: " + acceleration);
         transform.position += (Vector3)velocity * Time.deltaTime;
 
