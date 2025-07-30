@@ -10,7 +10,8 @@ public class Movement : MonoBehaviour
 
     private Animator animator;
     private Vector2 velocity = Vector2.zero;
-    public Vector2 lastDirection = Vector2.zero;
+    public Vector2 lastAcceleration = Vector2.zero;
+    public bool dirChanged = false;
 
     private void Awake()
     {
@@ -23,26 +24,8 @@ public class Movement : MonoBehaviour
         Vector2 verticalInput = new Vector2(0f, Input.GetAxis("Vertical"));
 
         // Acceleration Movement
-        Vector2 movement = horizontalInput + verticalInput;
+        Vector2 movement = horizontalInput;// + verticalInput;
         Vector2 acceleration = movement.normalized;
-
-        if (movement.x == 0) movement.x = 0;
-        else if (movement.x < 0) movement.x = -1;
-        else if (movement.x > 0) movement.x = 1;
-
-        bool dirChanged = false;
-        if (lastDirection.x != movement.x && velocity != Vector2.zero)
-        {
-            Debug.Log("RUN");
-            dirChanged = true;
-            velocity -= velocity * decelerationConstant * Time.deltaTime * 2;
-
-            if (Approximate(velocity, Vector2.zero, 0.1f))
-            {
-               // lastDirection = acceleration;
-                dirChanged = false;
-            }
-        }
 
         if (acceleration != Vector2.zero && dirChanged == false)
             velocity += acceleration * accelerationConstant * Time.deltaTime;
@@ -51,10 +34,21 @@ public class Movement : MonoBehaviour
             velocity -= velocity * decelerationConstant * Time.deltaTime;
         }
 
+        if(lastAcceleration != acceleration && acceleration != Vector2.zero)
+        {
+            dirChanged = true;
+            Debug.Log("RUN");
+            velocity -= velocity * decelerationConstant * Time.deltaTime * 2f;
 
-        if (dirChanged == false) lastDirection = movement;
+            if(Approximate(velocity, Vector2.zero, 0.1f))
+            {
+                dirChanged = false;
+            }
+        }
+
+        if (dirChanged == false) lastAcceleration = acceleration;
         velocity = Vector2.ClampMagnitude(velocity, Maxspeed);
-        Debug.Log("Movement: " + movement + " || Last Direction: " + lastDirection);
+        Debug.Log("acceleration: " + acceleration + " || lastAcceleration: " + lastAcceleration);
         Debug.Log("Velocity: " + velocity + " || Acceleration: " + acceleration);
         transform.position += (Vector3)velocity * Time.deltaTime;
 
